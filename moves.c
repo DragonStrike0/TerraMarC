@@ -52,7 +52,7 @@ t_localisation translate(t_localisation loc, t_move move)
      *  - y grows to the bottom with step of +1
      *  - the origin (x=0, y=0) is at the top left corner
      */
-    t_position res;
+    t_position res = loc.pos;
     switch (move) {
         case F_10:
             switch (loc.ori) {
@@ -142,8 +142,8 @@ char *getMoveAsString(t_move move)
 
 t_localisation move(t_localisation loc, t_move move)
 {
-    t_localisation new_loc;
-    new_loc.ori = rotate(loc.ori, move);
+    t_localisation new_loc = loc;
+    new_loc.ori = rotate(new_locq.ori, move);
     new_loc = translate(loc, move);
     return new_loc;
 }
