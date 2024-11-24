@@ -1,49 +1,37 @@
-#include "stack.h"
+//
+// Created by Dragon_Strike on 24/11/2024.
+//
+
+#ifndef UNTITLED1_PHASE_H
+#define UNTITLED1_PHASE_H
 #include "moves.h"
-#include "loc.h"
-#include "stdlib.h"
-#ifndef UNTITLED1_TREE_H
-#define UNTITLED1_TREE_H
+#include "map.h"
 
-typedef struct {
-    t_move moves[9];
-    int count_moves;
-}t_avlbl_moves;
+typedef struct Node {
+    int value;                // Valeur du nœud (facultatif)
+    int num_children;         // Nombre d'enfants pour ce nœud
+    struct Node** children;   // Tableau de pointeurs vers les enfants
+} Node;
 
-typedef struct node{
-    t_localisation loc;
-    int cost;
-    t_move last_move;
-    struct node* parent;
-    struct node** children;
-    int child_count;
-    int depth;
-}t_node;
-
-typedef struct {
-    t_node *root;
-    int max_depth;
-    int total_nodes;
-}t_tree;
+typedef struct s_chance{
+    int T_LEFT;
+    int T_RIGHT;
+    int U_TURN;
+    int F_10;
+    int F_20;
+    int F_30;
+    int B_10;
+}t_chance;
 
 
+int* getMoves(int *,int,int);
+t_move move_num(int );
+Node* create_node(int , int );
+void build_tree(Node* , t_map , t_localisation , int*,int);
+t_localisation phase(t_localisation , t_chance , t_map );
+int num_move (int , t_chance * );
+int* base_moves(t_chance );
+int* best_way(Node* , int);
+int verif_collision(t_localisation);
 
-t_tree* create_tree(t_localisation start_loc, int start_cost, int max_depth);
-
-t_node* create_node(t_localisation loc, int cost, t_move move, t_node* parent, int depth);
-
-void add_child(t_node* parent, t_node* child);
-
-void build_tree_level(t_node* node, t_avlbl_moves* available_moves, int terrain_costs[MAX_Y][MAX_X]);
-
-t_node* find_min_cost_leaf(t_tree* tree);
-
-void get_path_to_node(t_node* node, t_move* moves, int* move_count);
-
-void free_tree(t_tree* tree);
-
-
-
-
-
-#endif //UNTITLED1_TREE_H
+#endif //UNTITLED1_PHASE_H
