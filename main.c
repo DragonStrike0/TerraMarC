@@ -32,5 +32,21 @@ int main() {
         printf("\n");
     }
     displayMap(map);
+
+    t_chance chance;
+    chance.F_10 = 22; chance.F_20 = 15; chance.B_10 = 7; chance.F_30 = 7; chance.T_LEFT = 21; chance.T_RIGHT = 21; chance.U_TURN = 7;
+    t_localisation robot = loc_init(3,3,EAST);
+    //updateLocalisation(&robot,F_20);
+    printf("\n");
+    displayMap(map);
+    printf("\n");
+    printf("Chemin du plus gros cout au plus petit\n");
+
+    phase(robot,chance,map);
+
+    printf("Le meilleur chemin est donc le dernier affiché !\n");
+    
+    
+
     return 0;
 }
