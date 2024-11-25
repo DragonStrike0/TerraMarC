@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include "map.h"
-
+#include "loc.h"
+#include "moves.h"
+#include "phase.h"
+#include "time.h"
 int main() {
     t_map map;
 
@@ -31,22 +34,24 @@ int main() {
         }
         printf("\n");
     }
-    displayMap(map);
-
     t_chance chance;
     chance.F_10 = 22; chance.F_20 = 15; chance.B_10 = 7; chance.F_30 = 7; chance.T_LEFT = 21; chance.T_RIGHT = 21; chance.U_TURN = 7;
     t_localisation robot = loc_init(3,3,EAST);
-    //updateLocalisation(&robot,F_20);
     printf("\n");
     displayMap(map);
     printf("\n");
-    printf("Chemin du plus gros cout au plus petit\n");
+    while (map.costs[robot.pos.x][robot.pos.y]!=0) {
+        double time_spent = 0.0;
+        clock_t begin = clock();
+        robot = phase(robot, chance, map);
+        clock_t end = clock();
+        time_spent += (double)(end - begin) / CLOCKS_PER_SEC;
 
-    phase(robot,chance,map);
-
-    printf("Le meilleur chemin est donc le dernier affiché !\n");
-    
-    
+        printf("\nNouvelle localisation du robot : (x: %d,y : %d) prix : %d\n", robot.pos.x,robot.pos.y,(map.costs[robot.pos.x][robot.pos.y]));
+        printf("\nThe elapsed time is %f seconds\n", time_spent);
+    }
+    printf("\n");
+    printf("\n");
 
     return 0;
 }
