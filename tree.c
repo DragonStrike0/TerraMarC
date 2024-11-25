@@ -12,12 +12,12 @@
 int* getMoves(int *moves,int index,int num_children) {
     //renvoie la liste des mouvements possibles aux nouveaux noeuds
 
-    int* new_moves = malloc(num_children*sizeof(int*));
+    int* new_moves = malloc(num_children*sizeof(int));
     for(int i=0;i<index;i++) {
         new_moves[i]=moves[i];
         //printf("\n%d",new_moves[i]);
     }
-    for(int i=index;i<num_children-1;i++){new_moves[i]=moves[i+1];
+    for(int i=index;i<num_children;i++){new_moves[i]=moves[i+1];
         //printf("\n%d",new_moves[i]);
         }
     //printf("\n");
@@ -30,59 +30,47 @@ void print_tree(Node* node, int level){
     for (int i = 0; i < level; i++) {
         printf("  ");
     }
-
-
     // Afficher les enfants
     for (int i = 0; i < node->num_children; i++) {
         print_tree(node->children[i], level + 1);
     }
 }
 int num_move (int i, t_chance * chance){
-    int tempTotal = chance->F_10;
-    if (i <= tempTotal && chance->F_10!=0){
+    if (i <= chance->F_10 && chance->F_10!=0){
         chance->F_10--;
         return 1;
     }
-    tempTotal += chance->F_20;
-
-     if(i<=tempTotal && chance->F_20!=0){
+    else if(i<=chance->F_20+chance->F_10 && chance->F_20!=0){
         chance->F_20--;
         return 2;
     }
-    tempTotal += chance->F_30;
-
-    if(i<=tempTotal && chance->F_30!=0){
+    else if(i<=chance->F_20+chance->F_10+chance->F_30 && chance->F_30!=0){
         chance->F_30--;
         return 3;
     }
-    tempTotal += chance->B_10;
-
-    if(i<=tempTotal && chance->B_10!=0){
+    else if(i<=chance->F_20+chance->F_10+chance->F_30+chance->B_10 && chance->B_10!=0){
         chance->B_10--;
         return 4;
     }
-    tempTotal += chance->T_LEFT;
-
-    if(i<=tempTotal && chance->T_LEFT!=0){
+    else if(i<=chance->F_20+chance->F_10+chance->F_30+chance->B_10+chance->T_LEFT && chance->T_LEFT!=0){
         chance->T_LEFT--;
         return 5;
     }
-    tempTotal += chance->T_RIGHT;
-
-    if(i<=tempTotal && chance->T_RIGHT!=0){
+    else if(i<=chance->F_20+chance->F_10+chance->F_30+chance->B_10+chance->T_LEFT+chance->T_RIGHT && chance->T_RIGHT!=0){
         chance->T_RIGHT--;
         return 6;
     }
-    tempTotal += chance->U_TURN;
-
-    if(i<=tempTotal && chance->U_TURN!=0){
+    else if(i<=chance->F_20+chance->F_10+chance->F_30+chance->B_10+chance->T_LEFT+chance->T_RIGHT+chance->U_TURN && chance->U_TURN!=0){
         chance->U_TURN--;
         return 7;
     }
-    return 8;
+    else{
+        return 8;
+    }
 }
 
 t_move move_num(int i){
+    //printf(" %d ",i);
     switch (i) {
         case 1 : return F_10;
         case 2 : return F_20;
@@ -123,60 +111,92 @@ Node* create_node(int value, int num_children) {
 }
 
 // Fonction récursive pour construire l'arbre
-void build_tree(Node* node, t_map map, t_localisation loc, int* moves, int reg) {
-    if (node->num_children < 5 + reg) {
+void build_tree(Node* node, t_map map, t_localisation loc, int*moves,int reg) {
+
+    if (node->num_children < 5+reg) {
         node->children = NULL;
         return; // Pas d'enfants à créer
     }
 
-    for (int i = 0; i < node->num_children; i++) {
+    for (int i = 0; i < node->num_children; i++){
         // Créer un enfant avec un niveau inférieur
-        int* new_moves = getMoves(moves, i, node->num_children);
-        t_localisation new_loc = move(loc, move_num(new_moves[i]));
+        int* new_moves = getMoves(moves,i,node->num_children);
+        t_localisation new_loc = loc ;
+
+        updateLocalisation(&new_loc, move_num(moves[i]));
 
         int collision = verif_collision(new_loc);
-        if (collision) {
+
+        if (collision==1){
             node->children[i] = create_node(map.costs[loc.pos.x][loc.pos.y], node->num_children - 1);
-        } else {
+            build_tree(node->children[i],map, loc, new_moves,reg);
+        }
+        else {
+
+
             node->children[i] = create_node(map.costs[new_loc.pos.x][new_loc.pos.y], node->num_children - 1);
+
+            build_tree(node->children[i],map, new_loc, new_moves,reg);
+
         }
 
-        if (node->children[i] != NULL) {
-            build_tree(node->children[i], map, collision ? loc : new_loc, new_moves, reg);
-        }
-
-        free(new_moves); // Free the allocated memory for new_moves
     }
 }
 
 t_localisation phase(t_localisation loc, t_chance chance, t_map map){
     t_localisation loc2 = loc;
     srand(time(NULL));
-    //int chemin[5] = {-1,-1,-1,-1,-1};
-    int* moves = base_moves(chance);
 
+    int* moves = base_moves(chance);
     Node *node = create_node(-1, 9);
-    printf("\n node value : %d",node->value);
+    printf("\nlocalisation x : %d y : %d ",loc.pos.x,loc.pos.y);
+    printori(loc.ori);
+
+
 
     int reg = 0;
     if (map.soils[loc.pos.x][loc.pos.y] == REG){
         reg=1;
     }
+    printf("\n%d %d %d %d %d %d %d %d %d \n",moves[0], moves[1], moves[2], moves[3], moves[4], moves[5], moves[6], moves[7], moves[8]);
+
     build_tree(node,map,loc, moves,reg);
-    printf("\n node value : %d",node->value);
 
     int * cheminfinal = best_way(node, reg);
-    for (int i = 0; i < 5; i++) {
-        loc2 = move(loc2, move_num(cheminfinal[i]));
+    int movesfinaux[5];
+    int oui = 0;
+    int supprimer[] = {15,15,15,15,15};
+    for (int  i=0;i<5;i++){
+        for (int y=0; y<5; y++) {
+            if (supprimer[y]==15) {
+                break;
+            }
+            if(supprimer[y]<=cheminfinal[i]){
+                cheminfinal[i]++;
+                oui = 1;
+            }
+        }
+
+
+        movesfinaux[i] = moves[cheminfinal[i]];
+        supprimer[i] = cheminfinal[i];
     }
-    free(moves);
-    free(cheminfinal);
+    if (movesfinaux[4]>7||movesfinaux[5]<0){
+        movesfinaux[4] = -1;
+    }
+    printf("%d %d %d %d %d ", movesfinaux[0], movesfinaux[1], movesfinaux[2], movesfinaux[3], movesfinaux[4]);
+    for (int i=0; i<5;i++){
+        if (movesfinaux[i]>0 && moves[i]<8) {
+            updateLocalisation(&loc2, move_num(movesfinaux[i]));
+            printf("\n New robot loc (x: %d,y : %d) prix : %d", loc2.pos.x,loc2.pos.y, map.costs[loc2.pos.x][loc2.pos.y]);
+        }
+    }
     return loc2;
 }
 
 int* best_way(Node* node, int reg) {
-    //cherche le chemin avec le coût le moins élevé possible à travers l'arbre
-    //pour trouver le meilleur chemin à parcourir
+    //cherche le chemin avec le coût le moins élevé possible à travers l'arbre pour trouver le meilleur chemin à parcourir
+
     int b,c,d,e,f,min = 100000;
     int* cheminfinal = malloc(5*sizeof(int));
     for (b=0;b<9;b++){
@@ -190,20 +210,19 @@ int* best_way(Node* node, int reg) {
                                           node->children[b]->children[c]->children[d]->value +
                                           node->children[b]->children[c]->children[d]->children[e]->value +
                                           node->children[b]->children[c]->children[d]->children[e]->children[f]->value;
-                                    printf("\nmin : %d", min);
-                                    printf("\nchemin : %d %d %d %d %d", b, c, d, e, f);
+                                    /*printf("\nmin : %d", min);
+                                    printf("\nchemin : %d %d %d %d %d", b, c, d, e, f);*/
                                     cheminfinal[0] = b;
                                     cheminfinal[1] = c;
                                     cheminfinal[2] = d;
                                     cheminfinal[3] = e;
                                     cheminfinal[4] = f;
 
-                                    printf("\nChemin en prix : %d %d %d %d %d\n", node->children[b]->value,
+                                    /*printf("\nChemin en prix : %d %d %d %d %d\n", node->children[b]->value,
                                            node->children[b]->children[c]->value,
                                            node->children[b]->children[c]->children[d]->value,
                                            node->children[b]->children[c]->children[d]->children[e]->value,
-                                           node->children[b]->children[c]->children[d]->children[e]->children[f]->value);
-                                    printf("\n");
+                                           node->children[b]->children[c]->children[d]->children[e]->children[f]->value);*/
                                 }
                             }
                             else {
@@ -212,19 +231,19 @@ int* best_way(Node* node, int reg) {
                                     min = node->children[b]->value + node->children[b]->children[c]->value +
                                           node->children[b]->children[c]->children[d]->value +
                                           node->children[b]->children[c]->children[d]->children[e]->value;
-                                    printf("\nmin : %d", min);
-                                    printf("\nchemin : %d %d %d %d %d", b, c, d, e, f);
+                                    /*printf("\nmin : %d", min);
+                                    printf("\nchemin : %d %d %d %d %d", b, c, d, e, f);*/
                                     cheminfinal[0] = b;
                                     cheminfinal[1] = c;
                                     cheminfinal[2] = d;
                                     cheminfinal[3] = e;
-                                    cheminfinal[4] = 0;
+                                    cheminfinal[4] = -1;
 
-                                    printf("\nChemin en prix : %d %d %d %d %d\n", node->children[b]->value,
+                                    /*printf("\nChemin en prix : %d %d %d %d %d\n", node->children[b]->value,
                                            node->children[b]->children[c]->value,
                                            node->children[b]->children[c]->children[d]->value,
-                                           node->children[b]->children[c]->children[d]->children[e]->value);
-                                    printf("\n");
+                                           node->children[b]->children[c]->children[d]->children[e]->value,
+                                           cheminfinal[4]);*/
                                 }
                             }
                         }
@@ -235,6 +254,21 @@ int* best_way(Node* node, int reg) {
     return cheminfinal;
 }
 
+void printori(t_orientation ori){
+    if (ori == NORTH){
+        printf("NORTH");
+    }
+    if (ori == EAST){
+        printf("EAST");
+    }
+    if (ori == WEST){
+        printf("WEST");
+    }
+    if (ori == SOUTH){
+        printf("SOUTH");
+    }
+
+}
 int* base_moves(t_chance chance) {
     //génére les enfants de la racine original avec les mouvements associés
     int* moves = (int*)malloc(9*sizeof(int));
@@ -249,11 +283,11 @@ int* base_moves(t_chance chance) {
     return moves;
 }
 int verif_collision(t_localisation new_loc) {
-    //renvoie si le robot rentre en collision avec la limite du terrain
-    //en fonction de sa nouvelle localisation
-    if (new_loc.pos.x > 6 || new_loc.pos.x<0 || new_loc.pos.y > 6 || new_loc.pos.y <0) {
+    //renvoie si le robot rentre en collision avec la limite du terrain en fonction de sa nouvelle localisation
+    if (new_loc.pos.x > 6 || new_loc.pos.x<0 || new_loc.pos.y > 5 || new_loc.pos.y <0) {
         return 1;
     }
     return 0;
-    
+
+
 }
