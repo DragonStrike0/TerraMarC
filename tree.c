@@ -19,7 +19,7 @@ int* getMoves(int *moves,int index,int num_children) {
     }
     for(int i=index;i<num_children;i++){new_moves[i]=moves[i+1];
         //printf("\n%d",new_moves[i]);
-        }
+    }
     //printf("\n");
     return new_moves;
 
@@ -83,28 +83,21 @@ t_move move_num(int i){
 }
 // Fonction pour créer un nœud
 Node* create_node(int value, int num_children) {
-
     Node* node = (Node*)malloc(sizeof(Node));
-
     if (node == NULL) {
         return NULL;
-
     }
     node->value = value;
     node->num_children = num_children;
 
-    // Allouer de la mémoire pour les enfants si le nœud a des enfants
     if (num_children > 4) {
-
-        node->children = malloc(num_children*sizeof(Node*));
-
+        node->children = malloc(num_children * sizeof(Node*));
         if (node->children == NULL) {
+            free(node);  // Free the previously allocated memory for node
             return NULL;
-
         }
     } else {
         node->children = NULL;
-        // Pas d'enfants pour ce nœud
     }
 
     return node;
@@ -149,7 +142,7 @@ t_localisation phase(t_localisation loc, t_chance chance, t_map map){
 
     int* moves = base_moves(chance);
     Node *node = create_node(-1, 9);
-    printf("\nlocalisation x : %d y : %d ",loc.pos.x,loc.pos.y);
+    printf("\nFirst Loc x : %d y : %d ",loc.pos.x,loc.pos.y);
     printori(loc.ori);
 
 
@@ -158,7 +151,7 @@ t_localisation phase(t_localisation loc, t_chance chance, t_map map){
     if (map.soils[loc.pos.x][loc.pos.y] == REG){
         reg=1;
     }
-    printf("\n%d %d %d %d %d %d %d %d %d \n",moves[0], moves[1], moves[2], moves[3], moves[4], moves[5], moves[6], moves[7], moves[8]);
+    printf("\nMoves picked at random : %d %d %d %d %d %d %d %d %d \n",moves[0], moves[1], moves[2], moves[3], moves[4], moves[5], moves[6], moves[7], moves[8]);
 
     build_tree(node,map,loc, moves,reg);
 
@@ -184,21 +177,32 @@ t_localisation phase(t_localisation loc, t_chance chance, t_map map){
     if (movesfinaux[4]>7||movesfinaux[5]<0){
         movesfinaux[4] = -1;
     }
-    printf("%d %d %d %d %d ", movesfinaux[0], movesfinaux[1], movesfinaux[2], movesfinaux[3], movesfinaux[4]);
+    printf("Moves picked at final : %d %d %d %d %d ", movesfinaux[0], movesfinaux[1], movesfinaux[2], movesfinaux[3], movesfinaux[4]);
     for (int i=0; i<5;i++){
         if (movesfinaux[i]>0 && moves[i]<8) {
             updateLocalisation(&loc2, move_num(movesfinaux[i]));
-            printf("\n New robot loc (x: %d,y : %d) prix : %d", loc2.pos.x,loc2.pos.y, map.costs[loc2.pos.x][loc2.pos.y]);
+            printf("\nNew robot loc (x: %d,y : %d) prix : %d", loc2.pos.x,loc2.pos.y, map.costs[loc2.pos.x][loc2.pos.y]);
+        }
+        else if (movesfinaux[i] == -1)
+        {
+            printf("\nNo valid move for index %d", i);
         }
     }
     return loc2;
 }
 
 int* best_way(Node* node, int reg) {
-    //cherche le chemin avec le coût le moins élevé possible à travers l'arbre pour trouver le meilleur chemin à parcourir
+    if (node == NULL) {
+        printf("Error: node is NULL\n");
+        return NULL;
+    }
 
-    int b,c,d,e,f,min = 100000;
-    int* cheminfinal = malloc(5*sizeof(int));
+    int b, c, d, e, f, min = 100000;
+    int* cheminfinal = malloc(5 * sizeof(int));
+    if (cheminfinal == NULL) {
+        printf("Error: Memory allocation failed\n");
+        return NULL;
+    }
     for (b=0;b<9;b++){
         for (c=0;c<8;c++){
             for (d=0;d<7;d++){
