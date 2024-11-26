@@ -40,15 +40,26 @@ int main() {
     printf("\n");
     displayMap(map);
     printf("\n");
+
     while (map.costs[robot.pos.x][robot.pos.y]!=0) {
         double time_spent = 0.0;
         clock_t begin = clock();
         robot = phase(robot, chance, map);
         clock_t end = clock();
         time_spent += (double)(end - begin) / CLOCKS_PER_SEC;
-
         printf("\nNouvelle localisation du robot : (x: %d,y : %d) prix : %d\n", robot.pos.x,robot.pos.y,(map.costs[robot.pos.x][robot.pos.y]));
         printf("\nThe elapsed time is %f seconds\n", time_spent);
+        if (robot.pos.x == 2 && robot.pos.y==5)
+        {
+            printf("The robot has reached his destination");
+            break;
+        }
+        if (robot.pos.x == 5 && robot.pos.y==5)
+        {
+            printf("The robot has reached his destination");
+            break;
+        }
+
     }
     printf("\n");
     printf("\n");
