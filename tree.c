@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "loc.h"
 #include "moves.h"
-#include "phase.h"
+#include "tree.h"
 #include "stdlib.h"
 #include "time.h"
 #include "math.h"
